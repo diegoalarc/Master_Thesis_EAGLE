@@ -119,7 +119,7 @@ Field_Carmen_nocorr <- cbind(Field_Carmen_nocorr,
                              Index_outliers)
 
 # New correlation analysis
-corrplot(cor(Field_Carmen_nocorr), method = 'square')
+corrplot(cor(Field_Carmen_nocorr), method = 'number')
 
 # Reorden the dataframe
 Field_Carmen_nocorr <- Field_Carmen_nocorr %>%
@@ -139,15 +139,15 @@ variables_nocorr$VarietyTHOMPSON <- NULL
 variables_nocorr$VarietyTIMCO <- NULL
 
 # New correlation analysis
-corrplot(cor(variables_nocorr), method = 'square')
+corrplot(cor(variables_nocorr), method = 'number')
 
 # Tuning parameters for feature selection
 number = 10
-n_repeats = 5
+n_repeats = 4
 #metric_rfe <- 'Rsquared'
 #metric_rfe <- 'RMSE'
 metric_rfe <- 'MAE'
-subsets <- c(2:4, 10:12)
+subsets <- c(1:11)
 
 set.seed(seed)
 
@@ -184,6 +184,10 @@ List_variables
 # Variable selection
 var_sel <- Field_Carmen %>% select(List_variables)
 
+# New correlation analysis but now for the selected variables
+corrplot(cor(var_sel), method = 'number')
+
+# https://statisticsbyjim.com/regression/no-p-values-nonlinear-regression/
 ################################################################################
 # Split the data into training and test set
 train_fraction <- 0.66
@@ -217,6 +221,10 @@ tunegrid <- expand.grid(.mtry=c(1:12))
 ntree <- 1000
 sigma <- c(0:1)
 
+# Preprocess from Caret
+preprocess <- c('center', 'scale')
+#preprocess <- c('range')
+
 # Calculate Tunlength with values around
 # rule of thumb
 tunlength <- round(sqrt(nrow(train.data)), digits = 0)
@@ -234,10 +242,11 @@ set.seed(seed)
 model_rf <- train(Kg_He ~., 
                   data = train.data, 
                   method = 'rf',
-                  ntree = ntree,
+                  #ntree = ntree,
                   metric = metric,
                   #tuneGrid = tunegrid,
                   tunlength = tunlength,
+                  preProcess = preprocess,
                   trControl = train.control)
 
 # Conditional Random Forest
@@ -248,6 +257,7 @@ model_crf <- train(Kg_He ~.,
                    #ntree = ntree,
                    metric = metric,
                    #tuneGrid = tunegrid,
+                   preProcess = preprocess,
                    trControl = train.control)
 
 # Gaussian Process with Radial Basis Function Kernel
@@ -257,6 +267,7 @@ model_gau <- train(Kg_He ~.,
                    method = 'gaussprRadial',
                    #sigma = sigma,
                    metric = metric,
+                   preProcess = preprocess,
                    trControl = train.control)
 
 ################################################################################
@@ -271,35 +282,25 @@ print(model_crf)
 print(model_gau)
 
 ################################################################################
-# Collect resamples to compare models
-#results <- resamples(list(RF = model_rf, CRF = model_crf, GAU_POL = model_gau))
-
-#summarize the distributions
-#summary(results)
-
-# boxplots of results
-#bwplot(results)
-
-################################################################################
 # Checking variable importance for:
 
 # Variable Importance Random Forest
 varImp(model_rf)
 
 # Plotting Variable Importance
-plot(varImp(model_rf),main = 'RF - Variable Importance')
+plot(varImp(model_rf),main = 'RF - Variable Importance S2')
 
 # Variable Importance Condition Random Forest
 varImp(model_crf)
 
 # Plotting Variable Importance
-plot(varImp(model_crf),main = 'CRF - Variable Importance')
+plot(varImp(model_crf),main = 'CRF - Variable Importance S2')
 
 # Variable Importance Gaussian Process
 varImp(model_gau)
 
 # Plotting Variable Importance
-plot(varImp(model_gau),main = 'Gaussian - Variable Importance')
+plot(varImp(model_gau),main = 'Gaussian - Variable Importance S2')
 
 ################################################################################
 # We predict the Model on Train as well as Test to understand how the model is
@@ -449,32 +450,31 @@ values_gau <- data.frame(Satellite = 'S1',
                          Observed = var_sel$Kg_He)
 
 ggplot(values_rf, aes(x = Observed, y = Predicted)) +
-  #stat_smooth_func(geom="text",method="lm",hjust=0,parse=TRUE) +
-  geom_point() +
-  geom_smooth(method = lm, color = "black", se = FALSE, formula = y ~ x) +
-  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
-               formula = y ~ x, parse = TRUE) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, color = 'blue', size = 1) +
+  #  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
+  #               formula = y ~ x, parse = TRUE) +
   xlim(0,80000) + ylim(0,80000) +
   labs(title = "Random Forest - Comparison S2",
        x = "Observed", y = "Predicted ") +
   theme_classic()
 
 ggplot(values_crf, aes(x = Observed, y = Predicted)) +
-  #stat_smooth_func(geom="text",method="lm",hjust=0,parse=TRUE) +
-  geom_point() +
-  geom_smooth(method = lm, color = "black", se = FALSE, formula = y ~ x) +
-  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
-               formula = y ~ x, parse = TRUE) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, color = 'blue', size = 1) +
+  #  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
+  #               formula = y ~ x, parse = TRUE) +
+  xlim(0,80000) + ylim(0,80000) +
   labs(title = "Conditional Random Forest - Comparison S2",
        x = "Observed", y = "Predicted ") +
   theme_classic()
 
 ggplot(values_gau, aes(x = Observed, y = Predicted)) +
-  #stat_smooth_func(geom="text",method="lm",hjust=0,parse=TRUE) +
-  geom_point() +
-  geom_smooth(method = lm, color = "black", se = FALSE, formula = y ~ x) +
-  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
-               formula = y ~ x, parse = TRUE) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, color = 'blue', size = 1) +
+  #  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
+  #               formula = y ~ x, parse = TRUE) +
+  xlim(0,80000) + ylim(0,80000) +
   labs(title = "Gaussian Process with Radial Basis Function Kernel - Comparison S2",
        x = "Observed", y = "Predicted ") +
   theme_classic()

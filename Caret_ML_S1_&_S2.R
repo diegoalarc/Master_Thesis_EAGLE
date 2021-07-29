@@ -123,11 +123,11 @@ print(highlyCorrelated)
 Field_Carmen_nocorr <- Field_Carmen[-highlyCorrelated]
 
 # New correlation analysis
-corrplot(cor(Field_Carmen_nocorr), method = 'square')
+corrplot(cor(Field_Carmen_nocorr), method = 'number')
 
 # Adding Dependent varible in the dataset.
 Field_Carmen_nocorr <- cbind(Index_outliers,
-                             VV_median = Radar_outliers$VV_median,
+                             #VV_median = Radar_outliers$VV_median,
                              Field_Carmen_nocorr)
 
 # New correlation analysis
@@ -140,12 +140,13 @@ Field_Carmen_nocorr <- Field_Carmen_nocorr %>%
 ################################################################################
 # Data preparation for Feature selection using Caret 
 # the Recursive Feature Elimination (RFE)
+# http://topepo.github.io/caret/recursive-feature-elimination.html#rfe
 
 variables_nocorr <- Field_Carmen_nocorr
 variables_nocorr$Year <- NULL
 
 # New correlation analysis
-corrplot(cor(variables_nocorr), method = 'square')
+corrplot(cor(variables_nocorr), method = 'number')
 
 # Tuning parameters for feature selection
 number = 10
@@ -153,7 +154,7 @@ n_repeats = 4
 #metric_rfe <- 'Rsquared'
 #metric_rfe <- 'RMSE'
 metric_rfe <- 'MAE'
-subsets <- c(2:14)
+subsets <- c(1:12)
 
 set.seed(seed)
 
@@ -190,18 +191,10 @@ List_variables
 # Variable selection
 var_sel <- Field_Carmen %>% select(List_variables)
 
-# Adding Dependent varible in the dataset.
-#var_sel <- cbind(var_sel)
-
 # New correlation analysis but now for the selected variables
-corrplot(cor(var_sel), method = 'square')
+corrplot(cor(var_sel), method = 'number')
 
-linearMod <- lm(Kg_He ~., data = var_sel)  # build linear regression model on full data
-print(linearMod)
-
-summary(linearMod)
-
-summary(linearMod)$coefficient
+# https://statisticsbyjim.com/regression/no-p-values-nonlinear-regression/
 ################################################################################
 # Split the data into training and test set
 train_fraction <- 0.66
@@ -234,6 +227,10 @@ tunegrid <- expand.grid(.mtry=c(1:22))
 ntree <- 1000
 sigma <- c(0:1)
 
+# Preprocess from Caret
+preprocess <- c('center', 'scale')
+#preprocess <- c('range')
+
 # Calculate Tunlength with values around
 # rule of thumb
 tunlength <- round(sqrt(nrow(train.data)), digits = 0)
@@ -255,6 +252,7 @@ model_rf <- train(Kg_He ~.,
                   metric = metric,
                   #tuneGrid = tunegrid,
                   tunlength = tunlength,
+                  preProcess = preprocess,
                   trControl = train.control)
 
 # Conditional Random Forest
@@ -265,6 +263,7 @@ model_crf <- train(Kg_He ~.,
                    #ntree = ntree,
                    metric = metric,
                    #tuneGrid = tunegrid,
+                   preProcess = preprocess,
                    trControl = train.control)
 
 # Gaussian Process with Radial Basis Function Kernel
@@ -274,6 +273,7 @@ model_gau <- train(Kg_He ~.,
                    method = 'gaussprRadial',
                    #sigma = sigma,
                    metric = metric,
+                   preProcess = preprocess,
                    trControl = train.control)
 
 ################################################################################
@@ -288,35 +288,58 @@ print(model_crf)
 print(model_gau)
 
 ################################################################################
-# Collect resamples to compare models
-#results <- resamples(list(RF = model_rf, CRF = model_crf, GAU_POL = model_gau))
-
-#summarize the distributions
-#summary(results)
-
-# boxplots of results
-#bwplot(results)
-
-################################################################################
 # Checking variable importance for:
 
 # Variable Importance Random Forest
 varImp(model_rf)
 
 # Plotting Variable Importance
-plot(varImp(model_rf),main = 'RF - Variable Importance')
+plot(varImp(model_rf), main = 'RF - Variable Importance S1 & S2')
+
+# Variable importance
+varimp_data_rf <- data.frame(feature = row.names(varImp(model_rf)$importance)[1:10],
+                          importance = varImp(model_rf)$importance[1:10, 1])
+
+ggplot(data = varimp_data_rf, 
+       aes(x = reorder(feature, -importance), y = importance, fill = feature)) +
+  geom_bar(stat="identity") + labs(x = "Features", y = "Variable Importance") + 
+  geom_text(aes(label = round(importance, 2)), vjust=1.6, color="white", size=4) + 
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1, colour = "black")) +
+  theme_bw() + theme(legend.position = "none")
 
 # Variable Importance Condition Random Forest
 varImp(model_crf)
 
 # Plotting Variable Importance
-plot(varImp(model_crf),main = 'CRF - Variable Importance')
+plot(varImp(model_crf),main = 'CRF - Variable Importance S1 & S2')
+
+# Variable importance
+varimp_data_crf <- data.frame(feature = row.names(varImp(model_crf)$importance)[1:10],
+                          importance = varImp(model_crf)$importance[1:10, 1])
+
+ggplot(data = varimp_data_crf, 
+       aes(x = reorder(feature, -importance), y = importance, fill = feature)) +
+  geom_bar(stat="identity") + labs(x = "Features", y = "Variable Importance") + 
+  geom_text(aes(label = round(importance, 2)), vjust=1.6, color="white", size=4) + 
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1, colour = "black")) +
+  theme_bw() + theme(legend.position = "none")
 
 # Variable Importance Gaussian Process
 varImp(model_gau)
 
 # Plotting Variable Importance
-plot(varImp(model_gau),main = 'Gaussian - Variable Importance')
+plot(varImp(model_gau),main = 'Gaussian - Variable Importance S1 & S2')
+
+# Variable importance
+varimp_data_gau <- data.frame(feature = row.names(varImp(model_gau)$importance)[1:10],
+                              importance = varImp(model_gau)$importance[1:10, 1])
+
+ggplot(data = varimp_data_gau, 
+       aes(x = reorder(feature, -importance), y = importance, fill = feature)) +
+  geom_bar(stat="identity") + labs(x = "Features", y = "Variable Importance") + 
+  geom_text(aes(label = round(importance, 2)), vjust=1.6, color="white", size=4) + 
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1, colour = "black")) +
+  theme_bw() + theme(legend.position = "none")
 
 ################################################################################
 # We predict the Model on Train as well as Test to understand how the model is
@@ -466,32 +489,56 @@ values_gau <- data.frame(Satellite = 'S1 & S2',
                          Observed = var_sel$Kg_He)
 
 ggplot(values_rf, aes(x = Observed, y = Predicted)) +
-  #stat_smooth_func(geom="text",method="lm",hjust=0,parse=TRUE) +
-  geom_point() +
-  geom_smooth(method = lm, color = "black", se = FALSE, formula = y ~ x) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, color = 'blue') +
 #  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
 #               formula = y ~ x, parse = TRUE) +
   xlim(0,80000) + ylim(0,80000) +
   labs(title = "Random Forest - Comparison S1 & S2",
        x = "Observed", y = "Predicted ") +
-  theme_classic()
+  theme_classic() + geom_point(color = "goldenrod")
 
 ggplot(values_crf, aes(x = Observed, y = Predicted)) +
-  #stat_smooth_func(geom="text",method="lm",hjust=0,parse=TRUE) +
-  geom_point() +
-  geom_smooth(method = lm, color = "black", se = FALSE, formula = y ~ x) +
-#  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
-#               formula = y ~ x, parse = TRUE) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, color = 'blue') +
+  #  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
+  #               formula = y ~ x, parse = TRUE) +
+  xlim(0,80000) + ylim(0,80000) +
   labs(title = "Conditional Random Forest - Comparison S1 & S2",
        x = "Observed", y = "Predicted ") +
-  theme_classic()
+  theme_classic() + geom_point(color = "goldenrod")
 
 ggplot(values_gau, aes(x = Observed, y = Predicted)) +
-  #stat_smooth_func(geom="text",method="lm",hjust=0,parse=TRUE) +
-  geom_point() +
-  geom_smooth(method = lm, color = "black", se = FALSE, formula = y ~ x) +
-#  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
-#               formula = y ~ x, parse = TRUE) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, color = 'blue') +
+  #  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), 
+  #               formula = y ~ x, parse = TRUE) +
+  xlim(0,80000) + ylim(0,80000) +
   labs(title = "Gaussian Process with Radial Basis Function Kernel - Comparison S1 & S2",
        x = "Observed", y = "Predicted ") +
-  theme_classic()
+  theme_classic() + geom_point(color = "goldenrod")
+
+################################################################################
+
+values_rf$x_position <- values_rf$Observed
+
+tidy_data <-
+  values_rf %>%
+  pivot_longer(cols = - c(Satellite, x_position),
+               names_to = "type_of_observation",
+               values_to = "measure")
+
+colored_plot <-
+  tidy_data %>%
+  ggplot(aes(x = x_position, y = measure)) +
+  geom_point(aes(color = type_of_observation)) 
+
+colored_plot
+
+colored_plot +
+  guides(color = guide_legend(title = "type of observation")) +
+  xlab("Observed value") +
+  ylab("Measure") 
+
+colored_plot
+
