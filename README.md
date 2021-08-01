@@ -65,7 +65,9 @@ The codes for the machine learning process were generated through R and mainly u
 The codes can be observed in the following links:
 
 [S1 + Field Data](https://github.com/diegoalarc/Master_Thesis_EAGLE/blob/main/Script_data/R_code/Caret_ML_S1.R)
+
 [S2 + Field data](https://github.com/diegoalarc/Master_Thesis_EAGLE/blob/main/Script_data/R_code/Caret_ML_S2.R)
+
 [S1 & S2 + Field data](https://github.com/diegoalarc/Master_Thesis_EAGLE/blob/main/Script_data/R_code/Caret_ML_S1_%26_S2.R)
 
 After running the codes in the same section of R, to better observe its results, it is recommended to use the following code:
