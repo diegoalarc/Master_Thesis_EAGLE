@@ -60,11 +60,11 @@ for (k in 1:length(Value_bands_cm)){
   df10 <- df10[df10$CAMPO == 'CARMEN ROSA',]
   
   df10 <- merge(df9, df10, by.x=c('Year', 'Field'), by.y=c('Year', 'Field'))
-  
+
   # Clean rows are not necessary
   df10$CAMPO <- NULL
   df10$Variety <- NULL
-#  df10$Season <- NULL
+  df10$Season <- NULL
   
   # Save dataframe as .CSV
   write.csv(df10, 
@@ -121,7 +121,7 @@ for (k in 1:length(Value_bands_q)){
   df9$Weather_station.x <- NULL
   df9$Weather_station.y <- NULL
   df9$Weather_station.x <- NULL
-#  df9$Weather_station.y <- NULL
+  df9$Weather_station.y <- NULL
   
   # Merge with Fertilizer
   df10 <- read.csv('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Original_data/Fertilizers/Fertilizer.csv')
@@ -133,6 +133,8 @@ for (k in 1:length(Value_bands_q)){
   
   # Clean rows are not necessary
   df10$CAMPO <- NULL
+  df10$CAMPO.x <- NULL
+  df10$CAMPO.y <- NULL
   df10$Variety <- NULL
   df10$Season <- NULL
   
@@ -176,6 +178,9 @@ for (k in 1:length(Value_bands_cm_m)){
   
   df4 <- df4[order(df4$id),]
   
+  df4$CAMPO.x <- NULL
+  df4$CAMPO.y <- NULL
+  
   # Save dataframe as .CSV
   write.csv(df4, 
             paste0('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Original_data/Final_values/fn_',file_name), 
@@ -210,6 +215,9 @@ for (k in 1:length(Value_bands_q_m)){
     relocate("id", "Year", "Field", "Variety", "Kg_He" , "Area_He")
   
   df4 <- df4[order(df4$id),]
+  
+  df4$CAMPO.x <- NULL
+  df4$CAMPO.y <- NULL
   
   # Save dataframe as .CSV
   write.csv(df4, 

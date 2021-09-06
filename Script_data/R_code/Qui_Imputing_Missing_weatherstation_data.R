@@ -2,6 +2,9 @@
 # https://www.researchgate.net/post/Is_there_an_approach_or_R-package_for_imputing_missing_values_in_time_series_data
 # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3074241/
 # http://juliejosse.com/wp-content/uploads/2018/06/DataAnalysisMissingR.html
+# https://www.gerkovink.com/miceVignettes/Convergence_pooling/Convergence_and_pooling.html
+# https://stefvanbuuren.name/fimd/index.html#section
+# 
 # Used for Test https://datascienceplus.com/imputing-missing-data-with-r-mice-package/ 
 # Imputing Missing data with Mice package
 #install.packages("mice")
@@ -104,7 +107,10 @@ Evapo <- transform(Evapo,
                    Talagante_Talagante = as.numeric(Talagante_Talagante))
 
 # Summary to obsevate the data distribution
+summary(Temperature)
 summary(Evapo)
+summary(Hum)
+summary(GGD)
 
 # MCAR: missing completely at random. 
 pMiss <- function(x){sum(is.na(x))/length(x)*100}
@@ -188,3 +194,22 @@ modelFit_Evapo <- with(EvapoData,lm(Talagante_Talagante ~ Los_Tilos +
                                       San_Antonio_de_Naltahua +
                                       San_Pedro_de_Melipilla))
 summary(pool(modelFit_Evapo))
+
+pool.r.squared(modelFit_Evapo)
+
+################################################################################
+# plot zone
+
+# Evapo
+par(mfrow=c(2,2))
+plot(Evapo$Time_UTC_Chile, Evapo$Talagante_Talagante,
+     main = "Evapotranspiration Loreto farm - Before imputing",
+     xlab = "Month",
+     ylab = expression('ET'[c]*'(mm'^.*'d'^-1*')'),
+     col = "brown")
+plot(completedData_Evapo$Time_UTC_Chile, completedData_Evapo$Talagante_Talagante,
+     main = "Evapotranspiration Loreto farm - After impute",
+     xlab = "Month",
+     ylab = expression('ET'[c]*'(mm'^.*'d'^-1*')'),
+     col = "brown")
+

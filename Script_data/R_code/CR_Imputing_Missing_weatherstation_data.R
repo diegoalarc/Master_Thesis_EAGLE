@@ -85,21 +85,29 @@ setwd('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE')
 
 ################################################################################
 # Working just with Temperature data
-aggr_plot_temp <- aggr(Temperature[2:5], col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE, 
-                  labels=names(Temperature[2:5]), cex.axis=.7, gap=3, 
-                  ylab=c("Histogram of missing Temperature","Pattern"))
+aggr(Temperature[2:5], col=c('navyblue','red'), numbers=T, sortVars=T,
+     labels=c('Los Tilos', 'San Antonio de Naltahua', 'San Pedro de Melipilla',
+              'Carmen Rosa'), cex.axis=.7, gap=3, oma = c(8,5,5,3),
+     ylab=c("Histogram of missing data","Pattern"))
+title(main = 'Missing data - Temperature', cex.main = 1)
+
 
 # Bloxplot of Carmen Rosa ws V/s the other weathe station
-marginplot(Temperature[c(2,5)])
-marginplot(Temperature[c(3,5)])
-marginplot(Temperature[c(4,5)])
-
-# Random Forest for Matching
-#tempData <- mice(Temperature[2:5], meth='rf', ntree = 10)
+marginplot(Temperature[c(2,5)],
+           ylab='Carmen Rosa',xlab='Los Tilos', 
+           main=('Missing data - Temperature'))
+marginplot(Temperature[c(3,5)],
+           ylab='Carmen Rosa',xlab='San Antonio de Naltahua', 
+           main=('Missing data - Temperature'))
+marginplot(Temperature[c(4,5)],
+           ylab='Carmen Rosa',xlab='San Pedro de Melipilla', 
+           main=('Missing data - Temperature'))
 
 # Predictive Mean Matching
 tempData <- mice(Temperature[2:5],m=5,maxit=50,meth='pmm',seed=500)
 summary(tempData)
+
+plot(tempData)
 
 completedData_Temp <- cbind(Temperature[1],complete(tempData,1))
 
@@ -194,6 +202,8 @@ modelFit_Temp <- with(tempData,lm(Carmen_Rosa ~ Los_Tilos +
                                     San_Antonio_de_Naltahua +
                                     San_Pedro_de_Melipilla))
 summary(pool(modelFit_Temp))
+
+pool.r.squared(modelFit_Temp)
 
 ################################################################################
 # Working just with Evapotranspiration data
@@ -307,6 +317,8 @@ modelFit_Evapo <- with(EvapoData,lm(Carmen_Rosa ~ Los_Tilos +
                                       San_Pedro_de_Melipilla))
 summary(pool(modelFit_Evapo))
 
+pool.r.squared(modelFit_Evapo)
+
 ################################################################################
 # Working just with Humidity data
 aggr_plot_hum <- aggr(Hum[2:5], col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE, 
@@ -417,6 +429,8 @@ modelFit_Hum <- with(HumData,lm(Carmen_Rosa ~ Los_Tilos +
                                   San_Pedro_de_Melipilla))
 summary(pool(modelFit_Hum))
 
+pool.r.squared(modelFit_Hum)
+
 ################################################################################
 # Working just with Growing degree-day data
 aggr_plot_GGD <- aggr(GGD[2:5], col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE, 
@@ -499,6 +513,11 @@ GGD_2020 <- data.frame(
 
 GGD_fn <- rbind(GGD_2018, GGD_2019, GGD_2020)
 
+# Complete GDD
+write.csv(completedData_GGD, 
+          paste0('./Original_data/weather_station/Carmen_Rosa/GGD_complete_CR.csv'), 
+          row.names = F, quote = F)
+
 # Save dataframe as .CSV
 write.csv(GGD_fn, 
           paste0('./Original_data/weather_station/Carmen_Rosa/GGD.csv'), 
@@ -527,3 +546,60 @@ modelFit_GGD <- with(GGDData,lm(Carmen_Rosa ~ Los_Tilos +
                                   San_Antonio_de_Naltahua +
                                   San_Pedro_de_Melipilla))
 summary(pool(modelFit_GGD))
+
+pool.r.squared(modelFit_GGD)
+
+################################################################################
+# plot zone
+
+# temp
+par(mfrow=c(4,2))
+plot(Temperature$Time_UTC_Chile, Temperature$Carmen_Rosa,
+     main = "Temperature Carmen Rosa farm - Before imputing",
+     xlab = "Years",
+     ylab = "Celsius degrees (°C)",
+     col = "blue")
+plot(completedData_Temp$Time_UTC_Chile, completedData_Temp$Carmen_Rosa,
+     main = "Temperature Carmen Rosa farm - After impute",
+     xlab = "Years",
+     ylab = "Celsius degrees (°C)",
+     col = "blue")
+
+# Evapo
+#par(mfrow=c(2,2))
+plot(Evapo$Time_UTC_Chile, Evapo$Carmen_Rosa,
+     main = "Evapotranspiration Carmen Rosa farm - Before imputing",
+     xlab = "Years",
+     ylab = expression('ET'[c]*'(mm'^.*'d'^-1*')'),
+     col = "brown")
+plot(completedData_Evapo$Time_UTC_Chile, completedData_Evapo$Carmen_Rosa,
+     main = "Evapotranspiration Carmen Rosa farm - After impute",
+     xlab = "Years",
+     ylab = expression('ET'[c]*'(mm'^.*'d'^-1*')'),
+     col = "brown")
+
+# hum
+#par(mfrow=c(2,2))
+plot(Hum$Time_UTC_Chile, Hum$Carmen_Rosa,
+     main = "Humidity Carmen Rosa farm - Before imputing",
+     xlab = "Years",
+     ylab = "Relative Humidity (%)",
+     col = "purple")
+plot(completedData_Hum$Time_UTC_Chile, completedData_Hum$Carmen_Rosa,
+     main = "Humidity Carmen Rosa farm - After impute",
+     xlab = "Years",
+     ylab = "Relative Humidity (%)",
+     col = "purple")
+
+# GDD
+#par(mfrow=c(2,2))
+plot(GGD$Time_UTC_Chile, GGD$Carmen_Rosa,
+     main = "GDD Carmen Rosa farm - Before imputing",
+     xlab = "Years",
+     ylab = "Celsius degrees (°C)",
+     col = "green")
+plot(completedData_GGD$Time_UTC_Chile, completedData_GGD$Carmen_Rosa,
+     main = "GDD Carmen Rosa farm - After impute",
+     xlab = "Years",
+     ylab = "Celsius degrees (°C)",
+     col = "green")
