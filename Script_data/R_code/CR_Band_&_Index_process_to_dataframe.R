@@ -23,7 +23,8 @@ roi <- spTransform(roi, CRS('+proj=utm +zone=19 +south +datum=WGS84 +units=m +no
 farm_name <- 'Carmen_Rosa_Field'
 
 # Stat
-stat_type <- c('max', 'mean', 'median', 'min', 'stdev', 'sum')
+stat_type <- 'median'
+#stat_type <- c('max', 'mean', 'median', 'min', 'stdev', 'sum')
 
 # Activation of the cores in the device and focus these in the following process
 beginCluster()
@@ -80,7 +81,7 @@ for (i in 1:length(stat_type)){
     ##############################################################################
     # Combine Values Vector
     bands_ins <- c('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 
-                   'B9', 'B10', 'B11', 'B12', 'EVI', 'GNDVI', 'NDMI', 'NDVI', 
+                   'B9', 'B10', 'B11', 'B12', 'EVI', 'GNDVI', 'NDWI', 'NDVI', 
                    'VH', 'VV')
     
     # Columns names
@@ -126,7 +127,7 @@ for (i in 1:length(stat_type)){
                          paste0('B7_', type_now), paste0('B8_', type_now), paste0('B8A_', type_now), 
                          paste0('B9_', type_now), paste0('B10_', type_now), paste0('B11_', type_now),
                          paste0('B12_', type_now), paste0('EVI_', type_now), paste0('GNDVI_', type_now),
-                         paste0('NDMI_', type_now), paste0('NDVI_', type_now), paste0('VH_', type_now),
+                         paste0('NDWI_', type_now), paste0('NDVI_', type_now), paste0('VH_', type_now),
                          paste0('VV_', type_now), 'Year', 'Field')
     
     # Create a List using the iterator
