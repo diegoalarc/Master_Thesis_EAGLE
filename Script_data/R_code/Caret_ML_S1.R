@@ -1,18 +1,13 @@
-library(car)
-library(dplyr)
-library(ggplot2)
-library(ggpmisc)
-library(PerformanceAnalytics)
-library(ggthemes)
-library(corrplot)
-library(psych)
-library(caret)
-library(caretEnsemble)
-library(doParallel)
-library(tidyverse)
-library(kernlab)
-library(skimr)
-library(vip)
+pkgs <- c("car", "vip", "caret", "skimr", "psych", "dplyr", "kernlab", "ggplot2", "ggpmisc", 
+          "corrplot", "ggthemes", "tidyverse", "doParallel", "caretEnsemble", 
+          "PerformanceAnalytics")
+
+for (i in pkgs){
+  if (!require(i, character.only = TRUE)){
+    install.packages(i, dependencies = TRUE)
+    library(i, dependencies=TRUE)
+  }
+}
 
 # set a seed
 seed <- 7
@@ -31,6 +26,7 @@ Field_Carmen$id <- NULL
 Field_Carmen$Year <- NULL
 Field_Carmen$Field <- NULL
 Field_Carmen$Variety <- NULL
+Field_Carmen[3:19] <- list(NULL)
 
 ################################################################################
 # Observation of the dataset
@@ -44,31 +40,22 @@ corrplot(cor(Field_Carmen), method = 'color', tl.srt=45,
 
 ################################################################################
 # Revision of outliers
-Bands_outliers <- Field_Carmen[,3:15]
-Index_outliers <- Field_Carmen[,16:19]
-Radar_outliers <- Field_Carmen[,20:21]
-Weather_Station_outliers <- Field_Carmen[,22:45]
-Fertilizers <- Field_Carmen[,46:50]
+Radar_outliers <- Field_Carmen[,3:4]
+Weather_Station_outliers <- Field_Carmen[,5:28]
+Fertilizers <- Field_Carmen[,29:33]
 
 # Boxplot for the outliers to visual check
-boxplot(Bands_outliers, col = 'orange', main = 'Features Boxplot')
-boxplot(Index_outliers, col = 'orange', main = 'Features Boxplot')
 boxplot(Radar_outliers, col = 'orange', main = 'Features Boxplot')
 boxplot(Weather_Station_outliers, col = 'orange', main = 'Features Boxplot')
 boxplot(Fertilizers, col = 'orange', main = 'Features Boxplot')
 
 # Analysis of outliers
-boxplot(Field_Carmen$B10_median, col = 'red', main = 'Features Boxplot - B10_median')
 boxplot(Field_Carmen$VV_median, col = 'red', main = 'Features Boxplot - VV_median')
 boxplot(Fertilizers$N.Unit.He, col = 'orange', main = 'Features Boxplot - N.Unit.He')
 boxplot(Fertilizers$P.Unit.He, col = 'orange', main = 'Features Boxplot - P.Unit.He')
 boxplot(Fertilizers$CaO.Unit.He, col = 'orange', main = 'Features Boxplot - CaO.Unit.He')
 
 # Numerical analysis of outliers
-B10_median_outliers <- which(Field_Carmen$B10_median > 0.07835|
-                               Field_Carmen$B10_median < 0)
-Field_Carmen[B10_median_outliers, 'B10_median']
-
 VV_median_outliers <- which(Field_Carmen$VV_median > -9.5 |
                               Field_Carmen$VV_median < -10.8)
 Field_Carmen[VV_median_outliers, 'VV_median']
@@ -104,20 +91,9 @@ correlationMatrix <- cor(Field_Carmen[,-1])
 highlyCorrelated <- findCorrelation(correlationMatrix, 
                                     cutoff=0.7)
 
-# print indexes of highly correlated attributes
-print(highlyCorrelated)
-
 # The above piece of code gives the variables where the correaltion is higher 
 # then 70%. We will eliminate these variables from our dataset.
 Field_Carmen_nocorr <- Field_Carmen[-highlyCorrelated]
-
-# New correlation analysis
-corrplot(cor(Field_Carmen_nocorr), method = 'color', tl.srt=45,
-         type = "lower", col=col)
-
-# Adding Dependent varible in the dataset.
-Field_Carmen_nocorr <- cbind(VV_median = Field_Carmen$VV_median,
-                             Field_Carmen_nocorr)
 
 # Reorden the dataframe
 Field_Carmen_nocorr <- Field_Carmen_nocorr %>%
@@ -156,23 +132,24 @@ results <- rfe(variables_nocorr[,-1],
 # Summarize the results
 print(results)
 
+# Save plot
+png(file='/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/RFE_S1.png',
+    width=500, height=400)
+
 # Plot the results
 plot(results, type=c('g', 'o'))
+dev.off()
 
 # List the chosen variables
 List_variables <- predictors(results)
 List_variables
 
 # Include variables
-List_variables <- append(c('Kg_He', 'VV_median'), List_variables)
+List_variables <- append(c('Kg_He'), List_variables)
 List_variables
 
 # Variable selection
 var_sel <- Field_Carmen %>% select(List_variables)
-
-# New correlation analysis but now for the selected variables
-corrplot(cor(var_sel), method = 'color', tl.srt=45,
-         type = "lower", col=col)
 
 ################################################################################
 # Split the data into training and test set
@@ -254,65 +231,80 @@ print(model_gau)
 ################################################################################
 # Checking variable importance for:
 
+# Colors ggplot
+colors <- c("S1" = "#d66f99", "Farm" = "#48ab66")
+
 # Variable Importance Random Forest
 varImp(model_rf)
 
 # Plotting Variable Importance
-plot(varImp(model_rf),main = 'RF - Variable Importance S1')
+#plot(varImp(model_rf),main = 'RF - Variable Importance S1')
 
 # Variable importance Random Forest ggplot
-varimp_data_rf <- data.frame(feature = row.names(varImp(model_rf)$importance)[1:5],
-                             importance = varImp(model_rf)$importance[1:5, 1])
+varimp_data_rf <- data.frame(feature = row.names(varImp(model_rf)$importance)[1:6],
+                             importance = varImp(model_rf)$importance[1:6, 1],
+                             Data = c('Farm', 'S1', 'Farm', 'Farm', 'S1', 'Farm'))
 
 ggplot(data = varimp_data_rf, 
-       aes(x = reorder(feature, -importance), y = importance, fill = feature)) +
-  geom_bar(stat="identity") + labs(x = "Features", y = "Variable Importance (%)") + 
-  geom_text(aes(label = round(importance, 2)), vjust=1.6, color="white", size=4) + 
-  #theme(axis.text.x = element_text(angle = 45, hjust = 1, colour = "black")) +
-  theme(axis.text.x=element_text(colour="black", angle = 30, size = 10)) +
-  labs(title = 'RF - Variable Importance S1') + 
-  theme(plot.title = element_text(hjust = 0.5)) +
+       aes(x = reorder(feature, importance), y = importance, fill = Data)) +
+  geom_bar(stat="identity") + labs(x = "Features", y = "Importance") + 
+  scale_fill_manual(values = colors) +
+  theme(axis.text.x=element_text(colour="black", angle = 30, size = 10),
+        axis.text.y=element_text(colour="black")) +
+  labs(title = 'RF - Variable Importance ML S1') + 
+  coord_flip() + theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = "none")
 
 # Variable Importance Conditional inference forests
 varImp(model_crf)
 
 # Plotting Variable Importance
-plot(varImp(model_crf),main = 'CIF - Variable Importance S1')
+#plot(varImp(model_crf),main = 'CIF - Variable Importance S1')
 
 # Variable importance Conditional inference forests ggplot
-varimp_data_crf <- data.frame(feature = row.names(varImp(model_crf)$importance)[1:5],
-                              importance = varImp(model_crf)$importance[1:5, 1])
+varimp_data_crf <- data.frame(feature = row.names(varImp(model_crf)$importance)[1:6],
+                              importance = varImp(model_crf)$importance[1:6, 1],
+                              Data = c('Farm', 'S1', 'Farm', 'Farm', 'S1', 'Farm'))
 
 ggplot(data = varimp_data_crf, 
-       aes(x = reorder(feature, -importance), y = importance, fill = feature)) +
-  geom_bar(stat="identity") + labs(x = "Features", y = "Variable Importance (%)") + 
-  geom_text(aes(label = round(importance, 2)), vjust=1.6, color="white", size=4) + 
-  #theme(axis.text.x = element_text(angle = 45, hjust = 1, colour = "black")) +
-  theme(axis.text.x=element_text(colour="black", angle = 30, size = 10)) +
-  labs(title = 'CIF - Variable Importance S1') + 
-  theme(plot.title = element_text(hjust = 0.5)) +
+       aes(x = reorder(feature, importance), y = importance, fill = Data)) +
+  geom_bar(stat="identity") + labs(x = "Features", y = "Importance") + 
+  scale_fill_manual(values = colors) +
+  theme(axis.text.x=element_text(colour="black", angle = 30, size = 10),
+        axis.text.y=element_text(colour="black")) +
+  labs(title = 'CIF - Variable Importance ML S1') +
+  coord_flip() +  theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = "none")
+
+# Save varImp_S1_RF plot
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_RF.png')
 
 # Variable Importance Gaussian Process
 varImp(model_gau)
 
 # Plotting Variable Importance
-plot(varImp(model_gau),main = 'GPR - Variable Importance S1')
+#plot(varImp(model_gau),main = 'GPR - Variable Importance S1')
 
 # Variable importance Gaussian Process Regression ggplot
-varimp_data_gau <- data.frame(feature = row.names(varImp(model_gau)$importance)[1:5],
-                              importance = varImp(model_gau)$importance[1:5, 1])
+varimp_data_gau <- data.frame(feature = row.names(varImp(model_gau)$importance)[1:6],
+                              importance = varImp(model_gau)$importance[1:6, 1],
+                              Data = c('Farm', 'S1', 'Farm', 'Farm', 'S1', 'Farm'))
+
+# Save varImp_S1_CIF plot
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_CIF.png')
 
 ggplot(data = varimp_data_gau, 
-       aes(x = reorder(feature, -importance), y = importance, fill = feature)) +
-  geom_bar(stat="identity") + labs(x = "Features", y = "Variable Importance (%)") + 
-  geom_text(aes(label = round(importance, 2)), vjust=1.6, color="white", size=4) + 
-  #theme(axis.text.x = element_text(angle = 45, hjust = 1, colour = "black")) +
-  theme(axis.text.x=element_text(colour="black", angle = 30, size = 10)) +
-  labs(title = 'GPR - Variable Importance S1') + 
-  theme(plot.title = element_text(hjust = 0.5)) +
+       aes(x = reorder(feature, importance), y = importance, fill = Data)) +
+  geom_bar(stat="identity") + labs(x = "Features", y = "Importance") + 
+  scale_fill_manual(values = colors) +
+  theme(axis.text.x=element_text(colour="black", angle = 30, size = 10),
+        axis.text.y=element_text(colour="black")) +
+  labs(title = 'GPR - Variable Importance ML S1') + 
+  coord_flip() +  theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = "none")
+
+# Save varImp_S1_GPR plot
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_GPR.png')
 
 ################################################################################
 # Test data predictions
@@ -333,8 +325,10 @@ predictions_gau
 # Creating postResample on Test data.
 # Random Forest
 postResample(predictions_rf, test.data$Kg_He)
+
 # Conditional inference forests
 postResample(predictions_crf, test.data$Kg_He)
+
 # Gaussian Process Regression
 postResample(predictions_gau, test.data$Kg_He)
 
@@ -407,59 +401,56 @@ total_result_S1 <- rbind(rf, crf, gau)
 
 # Make prediction for the year 2020
 # Random Forest
-#total_predictions_rf_qu_s1 <- predict(model_rf, var_sel)
-predictions_rf
+total_predictions_rf_qu_s1 <- predict(model_rf, var_sel)
 
 # Conditional inference forests
-#total_predictions_crf_qu_s1 <- predict(model_crf, var_sel)
-predictions_crf
+total_predictions_crf_qu_s1 <- predict(model_crf, var_sel)
 
 # Gaussian Process Regression
-#total_predictions_gau_qu_s1 <- predict(model_gau, var_sel)
-predictions_gau
+total_predictions_gau_qu_s1 <- predict(model_gau, var_sel)
 
 # Data predicted & original
 values_rf <- data.frame(Satellite = 'S1',
-                        #Predicted = total_predictions_rf_qu_s1,
-                        Predicted = predictions_rf,
-                        #Observed = var_sel$Kg_He,
-                        Observed = test.data$Kg_He)
+                        Predicted = total_predictions_rf_qu_s1,
+                        Observed = var_sel$Kg_He)
 
 values_crf <- data.frame(Satellite = 'S1',
-                         #Predicted = total_predictions_crf_qu_s1,
-                         Predicted = predictions_crf,
-                         #Observed = var_sel$Kg_He,
-                         Observed = test.data$Kg_He)
+                         Predicted = total_predictions_crf_qu_s1,
+                         Observed = var_sel$Kg_He)
 
 values_gau <- data.frame(Satellite = 'S1',
-                         #Predicted = total_predictions_gau_qu_s1,
-                         Predicted = predictions_gau,
-                         #Observed = var_sel$Kg_He,
-                         Observed = test.data$Kg_He)
+                         Predicted = total_predictions_gau_qu_s1,
+                         Observed = var_sel$Kg_He)
 
 ggplot(values_rf, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
-  #xlim(0,80000) + ylim(0,80000) +
-  xlim(30000,60000) + ylim(30000,60000) +
-  labs(title = "Random Forest - Comparison S1",
+  xlim(0,80000) + ylim(0,80000) +
+  labs(title = "Random Forest - ML S1",
        x = "Observed", y = "Predicted ") +
   theme_classic()
+
+# Save RF_S1_scatter_plot plot
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/RF_S1_scatter_plot.png')
 
 ggplot(values_crf, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
-  #xlim(0,80000) + ylim(0,80000) +
-  xlim(30000,60000) + ylim(30000,60000) +
-  labs(title = "Conditional inference forests - Comparison S1",
+  xlim(0,80000) + ylim(0,80000) +
+  labs(title = "Conditional inference forests - ML S1",
        x = "Observed", y = "Predicted ") +
   theme_classic()
+
+# Save CIF_S1_scatter_plot plot
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/CIF_S1_scatter_plot.png')
 
 ggplot(values_gau, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
-  #xlim(0,80000) + ylim(0,80000) +
-  xlim(30000,60000) + ylim(30000,60000) +
-  labs(title = "Gaussian Process Regression - Comparison S1",
+  xlim(0,80000) + ylim(0,80000) +
+  labs(title = "Gaussian Process Regression - ML S1",
        x = "Observed", y = "Predicted ") +
   theme_classic()
+
+# Save GRP_S1_scatter_plot plot
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/GRP_S1_scatter_plot.png')
