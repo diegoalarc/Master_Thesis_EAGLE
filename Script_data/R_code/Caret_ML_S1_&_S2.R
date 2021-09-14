@@ -1,6 +1,6 @@
 pkgs <- c("car", "vip", "caret", "skimr", "psych", "dplyr", "kernlab", "ggplot2", "ggpmisc", 
           "corrplot", "ggthemes", "tidyverse", "doParallel", "caretEnsemble", 
-          "PerformanceAnalytics", "randomForest")
+          "PerformanceAnalytics")
 
 for (i in pkgs){
   if (!require(i, character.only = TRUE)){
