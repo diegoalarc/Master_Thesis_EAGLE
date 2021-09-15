@@ -12,7 +12,7 @@ S1 & S2,Gaussian Radial Basis,0.503697361081912,5983.58045153342,5312.8714861476
 ,,,,,,
 ,,,,,,
 ,,,,,,
-,,,,,,
+,Loreto farm yield year 2020,,,,,
 ,Satellite,Model,Predicted,Original,Error (Kg),Error (%)
 ,S1,Random Forest,44838.7224841081,35878,8960.7224841081,24.9755351025924
 ,S1,CForest,38320.7928927444,35878,2442.7928927444,6.80860943403869

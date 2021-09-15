@@ -113,9 +113,15 @@ Field_Carmen_nocorr <- cbind(Index_outliers,
 Field_Carmen_nocorr <- Field_Carmen_nocorr %>%
   relocate('Kg_He')
 
+# Save corrplot
+png(file = '/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/Corrplot_S1_S2.png',
+    width = 1366, height = 708, units = "px")
+
 # New correlation analysis
-corrplot(cor(Field_Carmen_nocorr), method = 'color', tl.srt=45,
-         type = "lower", col=col)
+corrplot(cor(Field_Carmen_nocorr), method = 'color', tl.srt = 45,
+         type = "lower", col = col)
+
+dev.off()
 
 ################################################################################
 # Data preparation for Feature selection using Caret 
@@ -262,15 +268,16 @@ ggplot(data = varimp_data_rf,
        aes(y = reorder(feature, importance), x = importance, fill = Data)) +
   geom_bar(stat = "identity") + labs(y = "Features", x = "Importance") + 
   scale_fill_manual(values = colors) +
-  theme(axis.text.y=element_text(colour="black"),
-        axis.text.x=element_text(colour="black")) +
+  theme(axis.text.y = element_text(colour = "black"),
+        axis.text.x = element_text(colour = "black")) +
   labs(title = 'RF - Variable Importance ML S1 & S2') + 
   expand_limits(x = c(0, NA)) +
-  scale_x_continuous(labels = scales::label_number_si()) +
+  scale_x_continuous(labels = function(x) paste0(x, "%")) +
   theme(plot.title = element_text(hjust = 0.5))
 
 # Save varImp_S1_S2_RF plot
-ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_RF.png')
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_RF.png',
+       width = 1675, height = 1125, units = "px")
 
 # Variable Importance Conditional inference forests
 varImp(model_crf)
@@ -288,15 +295,16 @@ ggplot(data = varimp_data_crf,
        aes(y = reorder(feature, importance), x = importance, fill = Data)) +
   geom_bar(stat = "identity") + labs(y = "Features", x = "Importance") + 
   scale_fill_manual(values = colors) +
-  theme(axis.text.y=element_text(colour="black"),
-        axis.text.x=element_text(colour="black")) +
+  theme(axis.text.y = element_text(colour = "black"),
+        axis.text.x = element_text(colour = "black")) +
   labs(title = 'CIF - Variable Importance ML S1 & S2') + 
   expand_limits(x = c(0, NA)) +
-  scale_x_continuous(labels = scales::label_number_si()) +
+  scale_x_continuous(labels = function(x) paste0(x, "%")) +
   theme(plot.title = element_text(hjust = 0.5))
 
 # Save varImp_S1_S2_CIF plot
-ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_CIF.png')
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_CIF.png',
+       width = 1675, height = 1125, units = "px")
 
 # Variable Importance Gaussian Process Regression
 varImp(model_gau)
@@ -314,15 +322,16 @@ ggplot(data = varimp_data_gau,
        aes(y = reorder(feature, importance), x = importance, fill = Data)) +
   geom_bar(stat = "identity") + labs(y = "Features", x = "Importance") + 
   scale_fill_manual(values = colors) +
-  theme(axis.text.y=element_text(colour="black"),
-        axis.text.x=element_text(colour="black")) +
+  theme(axis.text.y = element_text(colour = "black"),
+        axis.text.x = element_text(colour = "black")) +
   labs(title = 'GPR - Variable Importance ML S1 & S2') + 
   expand_limits(x = c(0, NA)) +
-  scale_x_continuous(labels = scales::label_number_si()) +
+  scale_x_continuous(labels = function(x) paste0(x, "%")) +
   theme(plot.title = element_text(hjust = 0.5))
 
 # Save varImp_S1_S2_GPR plot
-ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_GPR.png')
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_GPR.png',
+       width = 1675, height = 1125, units = "px")
 
 ################################################################################
 # Test data predictions
@@ -397,7 +406,7 @@ rf <- data.frame(Satellite = 'S1 & S2',
                  Original = var_sel_qu_s1_s2$Kg_He)
 
 crf <- data.frame(Satellite = 'S1 & S2',
-                  Model = 'CForest',
+                  Model = 'Conditional inference forests',
                   R2 = R2(predictions_crf, test.data$Kg_He),
                   RMSE = RMSE(predictions_crf, test.data$Kg_He),
                   MAE = MAE(predictions_crf, test.data$Kg_He),
@@ -444,31 +453,31 @@ ggplot(values_rf, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
   xlim(0,80000) + ylim(0,80000) +
-  labs(title = "Random Forest - ML S1 & S2",
-       x = "Observed", y = "Predicted ") +
+  labs(title = "RF - ML S1 & S2", x = "Observed", y = "Predicted ") +
   theme_classic()
 
 # Save RF_S1_S2_scatter_plot plot
-ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/RF_S1_S2_scatter_plot.png')
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/RF_S1_S2_scatter_plot.png',
+       width = 1675, height = 1125, units = "px")
 
 ggplot(values_crf, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
   xlim(0,80000) + ylim(0,80000) +
-  labs(title = "Conditional inference forests - ML S1 & S2",
-       x = "Observed", y = "Predicted ") +
+  labs(title = "CIF - ML S1 & S2", x = "Observed", y = "Predicted ") +
   theme_classic()
 
 # Save CIF_S1_S2_scatter_plot plot
-ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/CIF_S1_S2_scatter_plot.png')
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/CIF_S1_S2_scatter_plot.png',
+       width = 1675, height = 1125, units = "px")
 
 ggplot(values_gau, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
   xlim(0,80000) + ylim(0,80000) +
-  labs(title = "Gaussian Process Regression - ML S1 & S2",
-       x = "Observed", y = "Predicted ") +
+  labs(title = "GPR - ML S1 & S2", x = "Observed", y = "Predicted ") +
   theme_classic()
 
 # Save GPR_S1_S2_scatter_plot plot
-ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/GPR_S1_S2_scatter_plot.png')
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/GPR_S1_S2_scatter_plot.png',
+       width = 1675, height = 1125, units = "px")
