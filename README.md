@@ -41,9 +41,9 @@ The satellite images for S1 were also obtained through the use of GEE, and the s
 
 The codes are:
 
-[Sentinel-1](https://code.earthengine.google.com/eaa2d79f440964846921aac3b567c164)
+[Sentinel-1](https://code.earthengine.google.com/99fa1791b727e4e8207eb552ac9269db)
 
-[Sentinel-2](https://code.earthengine.google.com/2e547a69163a7a0cb9d84a183a229fae)
+[Sentinel-2](https://code.earthengine.google.com/74b5a8daf30287f8a6928d6ef7d56e7a)
 
 After obtaining the images, by means of a code created in R, we were able to obtain the average value of each field (by variety of table grape) in each farm.
 

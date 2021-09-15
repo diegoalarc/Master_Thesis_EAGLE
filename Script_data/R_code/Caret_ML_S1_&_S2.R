@@ -259,13 +259,15 @@ varimp_data_rf <- data.frame(feature = row.names(varImp(model_rf)$importance)[1:
                                    'S2', 'S2', 'S2'))
 
 ggplot(data = varimp_data_rf,
-       aes(x = reorder(feature, importance), y = importance, fill = Data)) +
-  geom_bar(stat = "identity") + labs(x = "Features", y = "Importance") + 
+       aes(y = reorder(feature, importance), x = importance, fill = Data)) +
+  geom_bar(stat = "identity") + labs(y = "Features", x = "Importance") + 
   scale_fill_manual(values = colors) +
-  theme(axis.text.x=element_text(colour="black", angle = 30, size = 10),
-        axis.text.y=element_text(colour="black")) +
+  theme(axis.text.y=element_text(colour="black"),
+        axis.text.x=element_text(colour="black")) +
   labs(title = 'RF - Variable Importance ML S1 & S2') + 
-  coord_flip() +  theme(plot.title = element_text(hjust = 0.5))
+  expand_limits(x = c(0, NA)) +
+  scale_x_continuous(labels = scales::label_number_si()) +
+  theme(plot.title = element_text(hjust = 0.5))
 
 # Save varImp_S1_S2_RF plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_RF.png')
@@ -283,13 +285,15 @@ varimp_data_crf <- data.frame(feature = row.names(varImp(model_crf)$importance)[
                                    'S2', 'S2', 'S2'))
 
 ggplot(data = varimp_data_crf, 
-       aes(x = reorder(feature, importance), y = importance, fill = Data)) +
-  geom_bar(stat = "identity") + labs(x = "Features", y = "Importance") + 
+       aes(y = reorder(feature, importance), x = importance, fill = Data)) +
+  geom_bar(stat = "identity") + labs(y = "Features", x = "Importance") + 
   scale_fill_manual(values = colors) +
-  theme(axis.text.x=element_text(colour="black", angle = 30, size = 10),
-        axis.text.y=element_text(colour="black")) +
+  theme(axis.text.y=element_text(colour="black"),
+        axis.text.x=element_text(colour="black")) +
   labs(title = 'CIF - Variable Importance ML S1 & S2') + 
-  coord_flip() + theme(plot.title = element_text(hjust = 0.5))
+  expand_limits(x = c(0, NA)) +
+  scale_x_continuous(labels = scales::label_number_si()) +
+  theme(plot.title = element_text(hjust = 0.5))
 
 # Save varImp_S1_S2_CIF plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_CIF.png')
@@ -307,13 +311,15 @@ varimp_data_gau <- data.frame(feature = row.names(varImp(model_gau)$importance)[
                                        'S2', 'S2', 'S2'))
 
 ggplot(data = varimp_data_gau, 
-       aes(x = reorder(feature, importance), y = importance, fill = Data)) +
-  geom_bar(stat = "identity") + labs(x = "Features", y = "Importance") + 
+       aes(y = reorder(feature, importance), x = importance, fill = Data)) +
+  geom_bar(stat = "identity") + labs(y = "Features", x = "Importance") + 
   scale_fill_manual(values = colors) +
-  theme(axis.text.x=element_text(colour="black", angle = 30, size = 10),
-        axis.text.y=element_text(colour="black")) +
+  theme(axis.text.y=element_text(colour="black"),
+        axis.text.x=element_text(colour="black")) +
   labs(title = 'GPR - Variable Importance ML S1 & S2') + 
-  coord_flip() + theme(plot.title = element_text(hjust = 0.5))
+  expand_limits(x = c(0, NA)) +
+  scale_x_continuous(labels = scales::label_number_si()) +
+  theme(plot.title = element_text(hjust = 0.5))
 
 # Save varImp_S1_S2_GPR plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_GPR.png')
