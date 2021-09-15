@@ -74,8 +74,7 @@ After running the codes in the same session of R, to better observe its results,
 
 [Final Results](https://github.com/diegoalarc/Master_Thesis_EAGLE/blob/main/Script_data/R_code/Final_result.R)
 
-Machine Learning results
-| Machine Learning models |                       |              |                 |                 |                  |          |
+Machine Learning results:
 | ----------------------- | --------------------- | ------------ | --------------- | --------------- | ---------------- | -------- |
 | Satellite               | Model                 | R2           | RMSE            | MAE             | Predicted        | Original |
 | S1                      | Random Forest         | 0.3157938197 | 8865.1136027943 | 8028.5478705322 | 44838.7224841081 | 35878    |
