@@ -1,11 +1,21 @@
+##################################
+#Master Thesis Project           #
+#Caret ML process using S1 & S2  #
+#Creator: Diego Alarcon          #
+#Date: September,2021            #
+#Version: 1.0.1                  #
+##################################
+
+# Packages used in this project
 pkgs <- c("car", "vip", "caret", "skimr", "psych", "dplyr", "kernlab", "ggplot2", "ggpmisc", 
           "corrplot", "ggthemes", "tidyverse", "doParallel", "caretEnsemble", 
           "PerformanceAnalytics")
 
+# Install or call the library
 for (i in pkgs){
   if (!require(i, character.only = TRUE)){
     install.packages(i, dependencies = TRUE)
-    library(i, dependencies=TRUE)
+    library(i, dependencies = TRUE)
   }
 }
 
@@ -34,8 +44,8 @@ summary(Field_Carmen$Kg_He)
 summary(Field_Carmen)
 
 # Correlation plot
-corrplot(cor(Field_Carmen), method = 'color', tl.srt=45,
-         type = "lower", col=col)
+corrplot(cor(Field_Carmen), method = 'color', tl.srt = 45,
+         type = "lower", col = col)
 
 ################################################################################
 # Revision of outliers
@@ -129,6 +139,7 @@ dev.off()
 variables_nocorr <- Field_Carmen_nocorr
 
 # Tuning parameters for feature selection
+method_rfe <- 'repeatedcv'
 number = 10
 n_repeats = 4
 metric_rfe <- 'MAE'
@@ -138,7 +149,7 @@ set.seed(seed)
 # Recursive Feature Elimination
 # Define the control using a random forest selection function
 control <- rfeControl(functions = rfFuncs,
-                      method = 'repeatedcv',
+                      method = method_rfe,
                       repeats = n_repeats,
                       number = number,
                       verbose = FALSE)
@@ -154,7 +165,7 @@ print(results)
 
 # Save plot
 png(file='/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/RFE_S1_S2.png',
-    width=500, height=400)
+    width = 500, height = 400)
 
 # Plot the results
 plot(results, type=c('g', 'o'))
@@ -273,11 +284,11 @@ ggplot(data = varimp_data_rf,
   labs(title = 'RF - Variable Importance ML S1 & S2') + 
   expand_limits(x = c(0, NA)) +
   scale_x_continuous(labels = function(x) paste0(x, "%")) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
 
 # Save varImp_S1_S2_RF plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_RF.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
 
 # Variable Importance Conditional inference forests
 varImp(model_crf)
@@ -300,11 +311,11 @@ ggplot(data = varimp_data_crf,
   labs(title = 'CIF - Variable Importance ML S1 & S2') + 
   expand_limits(x = c(0, NA)) +
   scale_x_continuous(labels = function(x) paste0(x, "%")) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
 
 # Save varImp_S1_S2_CIF plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_CIF.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
 
 # Variable Importance Gaussian Process Regression
 varImp(model_gau)
@@ -327,11 +338,11 @@ ggplot(data = varimp_data_gau,
   labs(title = 'GPR - Variable Importance ML S1 & S2') + 
   expand_limits(x = c(0, NA)) +
   scale_x_continuous(labels = function(x) paste0(x, "%")) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
 
 # Save varImp_S1_S2_GPR plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_S2_GPR.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
 
 ################################################################################
 # Test data predictions
@@ -439,45 +450,72 @@ total_predictions_gau_qu_s1_s2 <- predict(model_gau, var_sel)
 # Data predicted & original
 values_rf <- data.frame(Satellite = 'S1 & S2',
                         Predicted = total_predictions_rf_qu_s1_s2,
-                        Observed = var_sel$Kg_He)
+                        Observed = var_sel$Kg_He,
+                        Residuals = var_sel$Kg_He - total_predictions_rf_qu_s1_s2)
 
 values_crf <- data.frame(Satellite = 'S1 & S2',
                          Predicted = total_predictions_crf_qu_s1_s2,
-                         Observed = var_sel$Kg_He)
+                         Observed = var_sel$Kg_He,
+                         Residuals = var_sel$Kg_He - total_predictions_crf_qu_s1_s2)
 
 values_gau <- data.frame(Satellite = 'S1 & S2',
                          Predicted = total_predictions_gau_qu_s1_s2,
-                         Observed = var_sel$Kg_He)
+                         Observed = var_sel$Kg_He,
+                         Residuals = var_sel$Kg_He - total_predictions_gau_qu_s1_s2)
 
 ggplot(values_rf, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
-  xlim(0,80000) + ylim(0,80000) +
+  annotate("text", x = 8500, y = 65000, label= "R² = 0.87", size = 5) + 
+  annotate("text", x = 19000, y = 70000, label = "MAE = 3,844.76 Kg/Ha", size = 5) +
+  annotate("text", x = 20000, y = 75000, label = "RMSE = 4,324.09 Kg/Ha", size = 5) +
   labs(title = "RF - ML S1 & S2", x = "Observed", y = "Predicted ") +
-  theme_classic()
+  theme_classic() + scale_x_continuous(expand = c(0, 0), limits = c(0,83000)) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0,81000))
 
 # Save RF_S1_S2_scatter_plot plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/RF_S1_S2_scatter_plot.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
 
 ggplot(values_crf, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
-  xlim(0,80000) + ylim(0,80000) +
+  annotate("text", x = 8500, y = 65000, label= "R² = 0.68", size = 5) + 
+  annotate("text", x = 19000, y = 70000, label = "MAE = 6,094.64 Kg/Ha", size = 5) +
+  annotate("text", x = 20000, y = 75000, label = "RMSE = 6,978.33 Kg/Ha", size = 5) +
   labs(title = "CIF - ML S1 & S2", x = "Observed", y = "Predicted ") +
-  theme_classic()
+  theme_classic() + scale_x_continuous(expand = c(0, 0), limits = c(0,83000)) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0,81000))
 
 # Save CIF_S1_S2_scatter_plot plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/CIF_S1_S2_scatter_plot.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
 
 ggplot(values_gau, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
-  xlim(0,80000) + ylim(0,80000) +
+  annotate("text", x = 8500, y = 65000, label= "R² = 0.50", size = 5) + 
+  annotate("text", x = 19000, y = 70000, label = "MAE = 5,312.87 Kg/Ha", size = 5) +
+  annotate("text", x = 20000, y = 75000, label = "RMSE = 5,983.58 Kg/Ha", size = 5) +
   labs(title = "GPR - ML S1 & S2", x = "Observed", y = "Predicted ") +
-  theme_classic()
+  theme_classic() + scale_x_continuous(expand = c(0, 0), limits = c(0,83000)) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0,81000))
 
 # Save GPR_S1_S2_scatter_plot plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/GPR_S1_S2_scatter_plot.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
+
+ggplot(values_rf, aes(x = Predicted, y = Residuals)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 0, color = 'blue') +
+  scale_y_continuous(breaks = seq(-15000, 15000, by = 5000), limits = c(-16000, 16000)) +
+  scale_x_continuous(breaks = seq(0, 60000, by = 10000), limits = c(20000,61000)) +
+  annotate("text", x = 22500, y = 10500, label= "R² = 0.87", size = 5) + 
+  annotate("text", x = 28200, y = 12500, label = "MAE = 3,844.76 Kg/Ha", size = 5) +
+  annotate("text", x = 28800, y = 14500, label = "RMSE = 4,324.09 Kg/Ha", size = 5) +
+  labs(title = "RF Residual - ML S1 & S2", x = "Predicted", y = "Residuals ") +
+  theme_classic()
+
+# Save RF_S1_S2_Residual plot
+ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/RF_S1_S2_Residual_plot.png',
+       dpi = 300, width = 1675, height = 1125, units = "px")

@@ -6,12 +6,14 @@ library(ggplot2)
 
 # Load the csv from OIV with the table grapes production in the world
 oiv_data <- read.csv("./For_write_thesis/OIV_Data/oiv_export-StatData-2021-06-11-09-05-26.csv")
+#oiv_data <- read.csv("./For_write_thesis/OIV_Data/OIV_Data_20Sep.csv", sep = ";")
+total_tonnes <- sum(as.numeric(oiv_data[,6]))
 
 # Selection of the 10 first which come all in descending order
 oiv_data <- as.data.frame(oiv_data[1:10,])
 
 # Percentage of each country production using the total amount of tonnes in the world
-Percentage <- oiv_data[,6]/27639358
+Percentage <- oiv_data[,6]/total_tonnes
 Percentage <- as.numeric(format(round(Percentage, 3), nsmall = 2))
 
 # Creation of a dataframe with the Country, Values in Tonnes and the percentage of the production

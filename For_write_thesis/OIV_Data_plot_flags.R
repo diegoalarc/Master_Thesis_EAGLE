@@ -9,12 +9,14 @@ library(scales) # for application of common formats to scale labels (e.g., comma
 
 # Load the csv from OIV with the table grapes production in the world
 oiv_data <- read.csv("./For_write_thesis/OIV_Data/oiv_export-StatData-2021-06-11-09-05-26.csv")
+#oiv_data <- read.csv("./For_write_thesis/OIV_Data/OIV_Data_20Sep.csv", sep = ";")
+total_tonnes <- sum(as.numeric(oiv_data[,6]))
 
 # Selection of the 10 first which come all in descending order
 oiv_data <- as.data.frame(oiv_data[1:10,])
 
 # Percentage of each country production using the total amount of tonnes in the world
-Percentage <- oiv_data[,6]/27639358
+Percentage <- oiv_data[,6]/total_tonnes
 Percentage <- as.numeric(format(round(Percentage, 3), nsmall = 2))
 
 # Creation of a dataframe with the Country, Values in Tonnes and the percentage of the production
@@ -34,12 +36,15 @@ mycolors <- c("#F8B195", "#F67280", "#C06C84", "#6C5B7B", "#355C7D")
 oiv_data %>%
   mutate(code = tolower(Country)) %>%
   ggplot(aes(y = reorder(Country, Percentage), x = Value)) + 
-  geom_col(colour = "black", show.legend = F) + 
+  geom_col(show.legend = F) + 
   geom_flag(x = 0, aes(country = code), size = 10) +
   geom_text(aes(label = paste(format(Percentage*100, nsmall=0), "%")),
-            hjust = 1, size = 5, color="white", position = position_dodge(width = 1)) +
+            hjust = 1, size = 5, color="white", 
+            position = position_dodge(width = 1)) +
   scale_x_continuous(name = "Tons produced", labels = scales::comma) +
   labs(y = "Countries", caption = "Source: OIV (2016)") +
   ggtitle("Major world producers year 2016") + 
   theme_bw() +
-  theme(axis.text.x=element_text(size=rel(2)))
+  theme(axis.text.x=element_text(size=rel(2)),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18))

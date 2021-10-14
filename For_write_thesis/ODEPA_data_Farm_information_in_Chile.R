@@ -35,6 +35,7 @@ N_farms_size_range <- transform(N_farms_size_range,
 colnames(N_farms_size_range) <- c("Farm size categories (ha)","Number of farms", 
                                   "% total", "Accumulated %")
 
+write.csv(N_farms_size_range,'/home/diego/Downloads/N_farms_size_range.csv')
 #grid.table(N_farms_size_range)
 
 g <- tableGrob(N_farms_size_range, rows = NULL)
@@ -76,6 +77,8 @@ colnames(N_farms_area) <- c("Region Number", "Region", "Number of farms",
 
 
 sum(N_farms_area[5:13,3])*100/sum(N_farms_area[,3])
+
+write.csv(N_farms_area,'/home/diego/Downloads/N_farms_area.csv')
 
 g1 <- tableGrob(N_farms_area, rows = NULL)
 

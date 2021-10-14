@@ -1,3 +1,11 @@
+##################################
+#Master Thesis Project           #
+#Caret ML process using S1       #
+#Creator: Diego Alarcon          #
+#Date: September,2021            #
+#Version: 1.0.1                  #
+##################################
+
 pkgs <- c("car", "vip", "caret", "skimr", "psych", "dplyr", "kernlab", "ggplot2", "ggpmisc", 
           "corrplot", "ggthemes", "tidyverse", "doParallel", "caretEnsemble", 
           "PerformanceAnalytics")
@@ -115,6 +123,7 @@ dev.off()
 variables_nocorr <- Field_Carmen_nocorr
 
 # Tuning parameters for feature selection
+method_rfe <- 'repeatedcv'
 number = 10
 n_repeats = 4
 metric_rfe <- 'MAE'
@@ -124,7 +133,7 @@ set.seed(seed)
 # Recursive Feature Elimination
 # Define the control using a random forest selection function
 control <- rfeControl(functions = rfFuncs,
-                      method = 'repeatedcv',
+                      method = method_rfe,
                       repeats = n_repeats,
                       number = number,
                       verbose = FALSE)
@@ -264,7 +273,7 @@ ggplot(data = varimp_data_rf,
 
 # Save varImp_S1_RF plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_RF.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
 
 # Variable Importance Conditional inference forests
 varImp(model_crf)
@@ -290,7 +299,7 @@ ggplot(data = varimp_data_crf,
 
 # Save varImp_S1_CIF plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_CIF.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
 
 # Variable Importance Gaussian Process
 varImp(model_gau)
@@ -316,7 +325,7 @@ ggplot(data = varimp_data_gau,
 
 # Save varImp_S1_GPR plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/varImp_S1_GPR.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
 
 ################################################################################
 # Test data predictions
@@ -437,32 +446,41 @@ values_gau <- data.frame(Satellite = 'S1',
 ggplot(values_rf, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
-  xlim(0,80000) + ylim(0,80000) +
+  annotate("text", x = 8500, y = 65000, label= "R² = 0.32", size = 5) + 
+  annotate("text", x = 19000, y = 70000, label = "MAE = 8,028.55 Kg/Ha", size = 5) +
+  annotate("text", x = 20000, y = 75000, label = "RMSE = 8,865.11 Kg/Ha", size = 5) +
   labs(title = "RF - ML S1", x = "Observed", y = "Predicted ") +
-  theme_classic()
+  theme_classic() + scale_x_continuous(expand = c(0, 0), limits = c(0,83000)) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0,81000))
 
 # Save RF_S1_scatter_plot plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/RF_S1_scatter_plot.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
 
 ggplot(values_crf, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
-  xlim(0,80000) + ylim(0,80000) +
+  annotate("text", x = 8500, y = 65000, label= "R² = 0.45", size = 5) + 
+  annotate("text", x = 19000, y = 70000, label = "MAE = 7,002.26 Kg/Ha", size = 5) +
+  annotate("text", x = 20000, y = 75000, label = "RMSE = 6,389.34 Kg/Ha", size = 5) +
   labs(title = "CIF - ML S1", x = "Observed", y = "Predicted ") +
-  theme_classic()
+  theme_classic() + scale_x_continuous(expand = c(0, 0), limits = c(0,83000)) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0,81000))
 
 # Save CIF_S1_scatter_plot plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/CIF_S1_scatter_plot.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
 
 ggplot(values_gau, aes(x = Observed, y = Predicted)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = 'blue') +
-  xlim(0,80000) + ylim(0,80000) +
+  annotate("text", x = 8500, y = 65000, label= "R² = 0.28", size = 5) + 
+  annotate("text", x = 19000, y = 70000, label = "MAE = 6,712.89 Kg/Ha", size = 5) +
+  annotate("text", x = 18000, y = 75000, label = "RMSE = 7,277 Kg/Ha", size = 5) +
   labs(title = "GPR - ML S1", x = "Observed", y = "Predicted ") +
-  theme_classic()
+  theme_classic() + scale_x_continuous(expand = c(0, 0), limits = c(0,83000)) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0,81000))
 
 # Save GRP_S1_scatter_plot plot
 ggsave('/home/diego/GITHUP_REPO/Master_Thesis_EAGLE/Plots/GPR_S1_scatter_plot.png',
-       width = 1675, height = 1125, units = "px")
+       dpi = 300, width = 1675, height = 1125, units = "px")
